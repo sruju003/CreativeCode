@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 2</title>
+
+  <!-- Google Fonts: Raleway -->
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
+
+  <style> 
+    @font-face {
+      font-family: 'TheFont';
+      src: url("https://garet.typeforward.com/assets/fonts/shared/TFMixVF.woff2")
+        format('woff2'); 
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-family: 'Raleway', sans-serif;
+      transition: background-color 0.5s ease;
+    }
+
+    /* Fullscreen canvas */
+    #sketch-holder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+    }
+
+    /* Centered Text with breathing animation */
+    .text-container {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .breathe-animation span {
+      font-family: 'TheFont';
+      font-size: clamp(8vw, 12vw, 18vw); /* Responsive font size for all screens */
+      text-align: center;
+      animation: letter-breathe 3s ease-in-out infinite;
+      color: white; /* Default text color */
+      transition: color 0.5s ease;
+    }
+
+    /* Breathing animation for text */
+    @keyframes letter-breathe {
+      from, to {
+        font-variation-settings: 'wght' 100;
+      }
+      50% {
+        font-variation-settings: 'wght' 900;
+      }
+    }
+  </style>
+</head>
+
+<body id="body" onclick="nextTheme()">
+  <!-- Fullscreen canvas holder -->
+  <div id="sketch-holder"></div>
+
+  <!-- Centered Text Section -->
+  <div class="text-container">
+    <div class="breathe-animation">
+      <span>you'rE art</span>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <script>
+    let capture;
+    let currentThemeIndex = 0; // Track current theme
+
+    //colour pairings for every interaction
+
+    const themes = [
+      { background: '#fce59f', foreground: '#14a0ad', textColor: '#fc8fac' },
+      { background: '#fcf2f0', foreground: '#fc8fac', textColor: '#14a0ad' },
+      { background: '#e3fca7', foreground: '#88a2ff', textColor: '#253a82' },
+      { background: '#8fddd0', foreground: '#000000', textColor: '#fc8fac' }
+    ];
+
+    function setup() {
+      let canvas = createCanvas(windowWidth, windowHeight);
+      canvas.parent('sketch-holder');
+
+      capture = createCapture({
+        audio: false,
+        video: {
+          width: windowWidth,
+          height: windowHeight
+        }
+      }, function() {
+        console.log('capture ready.');
+      });
+      capture.hide();
+      noStroke();
+
+      applyTheme(currentThemeIndex);
+    }
+
+    function draw() {
+      background(themes[currentThemeIndex].background);
+      capture.loadPixels();
+
+      const stepSize = 10; // Step size for pixel sampling
+
+      for (let y = 0; y < height; y += stepSize) {
+        for (let x = 0; x < width; x += stepSize) {
+          const i = (y * width + x) * 4;
+          const darkness = (255 - capture.pixels[i]) / 255;
+          const size = stepSize * darkness;
+
+          fill(themes[currentThemeIndex].foreground);
+
+          if (currentThemeIndex === 0) {
+            ellipse(x, y, size, size);
+          } else if (currentThemeIndex === 1) {
+            rect(x, y, size, size);
+          } else if (currentThemeIndex === 2) {
+            triangle(
+              x, y - size / 2,
+              x - size / 2, y + size / 2,
+              x + size / 2, y + size / 2
+            );
+          } else if (currentThemeIndex === 3) {
+            ellipse(x, y, size, size);
+          }
+        }
+      }
+    }
+
+    function nextTheme() {
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      applyTheme(currentThemeIndex);
+    }
+
+    function applyTheme(themeIndex) {
+      document.getElementById('body').style.backgroundColor = themes[themeIndex].background;
+      document.querySelector('.breathe-animation span').style.color = themes[themeIndex].textColor;
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+    }
+  </script>
+</body>
+</html>
